@@ -17,7 +17,7 @@ import scopikun_db
 load_dotenv()
 
 # Configuration
-VERSION = "v0.0.3"
+VERSION = "v0.0.4"
 print(f"Lancement du bot Scopikun {VERSION}...")
 
 class MyBot(commands.Bot):
@@ -79,10 +79,38 @@ async def pokedex(interaction: discord.Interaction, pokemon: str, forme: str = N
         return
 
     # image
+# 1. Récupération du numéro (ex: 0019 ou 0983)
     num = str(data['num_dex']).zfill(4)
-    code_forme = data['forme'] if data['forme'] else ""
-    filename = f"{num}{code_forme}.png"
+    
+    # 2. Logique du suffixe
+    # On n'ajoute un suffixe QUE si ce n'est PAS la forme originale du Pokémon.
+    # Dans ta DB, les formes originales ont souvent l'ID le plus bas pour un num_dex.
+    
+    suffixe = ""
+    region = data.get('region')
+    
+    # Liste des régions qui DOIVENT avoir un suffixe (les formes régionales)
+    # On vérifie si le nom contient la région ou si c'est une exception connue
+    # Mais le plus simple : est-ce que c'est un Rattata d'Alola ou un Scalpereur natif ?
+    
+    # On regarde si la colonne 'forme' en DB contient un code (A, G, H, P)
+    # ou si la région est une région de "forme" ET que le Pokémon existe ailleurs.
+    
+    if data.get('forme') in ['A', 'G', 'H', 'P']:
+        suffixe = data['forme']
+    elif region == "Alola" and int(num) < 722: # Pokémon des anciennes gen en version Alola
+        suffixe = "A"
+    elif region == "Galar" and int(num) < 810: # Pokémon des anciennes gen en version Galar
+        suffixe = "G"
+    elif region == "Hisui" and int(num) < 899: # Pokémon des anciennes gen en version Hisui
+        suffixe = "H"
+    elif region == "Paldea" and int(num) < 906: # Pokémon des anciennes gen en version Paldea (ex: Tauros)
+        suffixe = "P"
+
+    # 3. Construction du nom de fichier
+    filename = f"{num}{suffixe}.png"
     path_image = f"./sprites/{filename}"
+    
     if not os.path.exists(path_image):
         await interaction.response.send_message(f"❌ Image locale manquante : `{filename}`", ephemeral=True)
         return
@@ -99,18 +127,9 @@ async def pokedex(interaction: discord.Interaction, pokemon: str, forme: str = N
     embed.add_field(name="Types", value=type_str, inline=True)
     embed.add_field(name="Nom Anglais", value=data['nom_en'], inline=True)
 
-    if data['forme']:
-        if data['forme'] == "A":
-            formname = "Alola"
-        elif data['forme'] == "G":
-            formname = "Galar"
-        elif data['forme'] == "H":
-            formname = "Hisui"
-        elif data['forme'] == "P":
-            formname = "Paldea"
-        else:
-            formname = data['forme']
-        embed.add_field(name="Forme", value=formname, inline=True)
+    if data.get('region'):
+        # On affiche directement ce qu'il y a en base de données
+        embed.add_field(name="Région", value=data['region'], inline=True)
     stats = (
         f"**PV:** {data['hp']}\n"
         f"**ATK:** {data['atk']}\n"

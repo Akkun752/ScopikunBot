@@ -14,36 +14,44 @@ def get_connection():
         cursorclass=pymysql.cursors.DictCursor # Utilisation de DictCursor pour lire par nom de colonne
     )
 
-def get_pokemon_data(query_text, forme_input=None):
-    """
-    Recherche un Pokémon par numéro, nom FR ou nom EN.
-    """
+def get_pokemon_data(query_text, region_input=None):
     conn = get_connection()
     try:
         with conn.cursor() as cursor:
-            # 1. Préparation de la forme (mapping)
-            forme_map = {
-                'alola': 'A', 'alolan': 'A', 'a': 'A',
-                'galar': 'G', 'galarian': 'G', 'g': 'G',
-                'hisui': 'H', 'hisuian': 'H', 'h': 'H',
-                'paldea': 'P', 'paldean': 'P', 'p': 'P'
+            # 1. Mapping enrichi avec les abréviations courantes
+            region_map = {
+                'kanto': 'Kanto',
+                'johto': 'Johto',
+                'hoenn': 'Hoenn',
+                'sinnoh': 'Sinnoh',
+                'unys': 'Unys',
+                'kalos': 'Kalos',
+                'alola': 'Alola', 'alolan': 'Alola', 'a': 'Alola',
+                'galar': 'Galar', 'galarian': 'Galar', 'g': 'Galar',
+                'hisui': 'Hisui', 'hisuian': 'Hisui', 'h': 'Hisui',
+                'paldea': 'Paldea', 'paldean': 'Paldea', 'p': 'Paldea'
             }
-            forme_code = forme_map.get(forme_input.lower()) if forme_input else ""
+            
+            target_region = None
+            if region_input:
+                target_region = region_map.get(region_input.lower())
 
-            # 2. Préparation de l'ID si c'est un nombre
             search_id = None
             if query_text.isdigit():
                 search_id = query_text.zfill(4)
 
-            # 3. Requête SQL flexible (insensible à la casse par défaut en MySQL)
-            # Pour les accents, MySQL avec une collation utf8mb4_unicode_ci ignore déjà les accents.
-            sql = """
-                SELECT * FROM scpk_pokemon 
-                WHERE (num_dex = %s OR nom_fr = %s OR nom_en = %s)
-                AND (forme = %s OR (%s = '' AND (forme IS NULL OR forme = '')))
-                LIMIT 1
-            """
-            cursor.execute(sql, (search_id, query_text, query_text, forme_code, forme_code))
+            # 2. Construction de la requête
+            sql = "SELECT * FROM scpk_pokemon WHERE (num_dex = %s OR nom_fr = %s OR nom_en = %s)"
+            params = [search_id, query_text, query_text]
+
+            if target_region:
+                sql += " AND region = %s"
+                params.append(target_region)
+            else:
+                # Priorité à l'ID le plus bas (Kanto) si rien n'est précisé
+                sql += " ORDER BY id ASC LIMIT 1"
+
+            cursor.execute(sql, params)
             return cursor.fetchone()
     finally:
         conn.close()
