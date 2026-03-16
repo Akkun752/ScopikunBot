@@ -17,8 +17,8 @@ import scopikun_db
 load_dotenv()
 
 # Configuration
-VERSION = "v0.0.4"
-print(f"Lancement du bot Scopikun {VERSION}...")
+VERSION = "v0.0.5"
+print(f"Lancement du bot SAF Team {VERSION}...")
 
 class MyBot(commands.Bot):
     def __init__(self):
@@ -48,32 +48,32 @@ async def on_ready():
         print(f"Erreur de synchronisation : {e}")
 
 # === Commande /help ===
-@bot.tree.command(name="help", description="Affiche toutes les commandes du bot")
+@bot.tree.command(name="help", description="Display all the Bot's commands")
 async def help_command(interaction: discord.Interaction): # Retrait de self
     embed = discord.Embed(
-        title="Centre d'aide de Scopikun",
-        description="Voici la liste des commandes disponibles avec Scopikun !",
-        color=discord.Color.red()
+        title="SAFT Bot Help Center",
+        description="Here are all the commands !",
+        color=discord.Color.violet()
     )
-    embed.add_field(name="/pokedex", value="Affiche la page Pokédex d'un Pokémon", inline=False)
+    embed.add_field(name="/pokedex", value="Display the Pokédex page of a Pokémon", inline=False)
 
     if interaction.user.guild_permissions.administrator:
-        embed.add_field(name="━━━━━━━━━━━━━━━━━━━━", value="**Commandes Administrateurs**", inline=False)
+        embed.add_field(name="━━━━━━━━━━━━━━━━━━━━", value="**Admin Commands**", inline=False)
     await interaction.response.send_message(embed=embed)
 
 # === Commande /pokedex ===
-@bot.tree.command(name="pokedex", description="Affiche les informations d'un Pokémon")
+@bot.tree.command(name="pokedex", description="Display the Pokédex page of a Pokémon")
 @app_commands.describe(
-    pokemon="Nom (FR/EN) ou numéro du Pokémon",
-    forme="Optionnel : Alola, Galar, Hisui, Paldea (ou A, G, H, P)"
+    pokemon="Name (FR/EN) or Dex Number",
+    forme="Optionnal : Alola, Galar, Hisui, Paldea (or A, G, H, P)"
 )
 async def pokedex(interaction: discord.Interaction, pokemon: str, forme: str = None):
     # recup db
     data = scopikun_db.get_pokemon_data(pokemon, forme)
     if not data:
         await interaction.response.send_message(
-            f"❌ Impossible de trouver le Pokémon **{pokemon}**" + 
-            (f" sous la forme **{forme}**." if forme else "."), 
+            f"❌ Impossible to find the Pokémon **{pokemon}**" + 
+            (f" with form : **{forme}**." if forme else "."), 
             ephemeral=True
         )
         return
@@ -112,24 +112,24 @@ async def pokedex(interaction: discord.Interaction, pokemon: str, forme: str = N
     path_image = f"./sprites/{filename}"
     
     if not os.path.exists(path_image):
-        await interaction.response.send_message(f"❌ Image locale manquante : `{filename}`", ephemeral=True)
+        await interaction.response.send_message(f"❌ Image not found : `{filename}`", ephemeral=True)
         return
     file = discord.File(path_image, filename="pokemon.png")
 
     # embed
     embed = discord.Embed(
-        title=f"#{num} - {data['nom_fr']}",
-        description=data['description'],
-        color=discord.Color.red()
+        title=f"#{num} - {data['nom_en']}",
+        #description=data['description'],
+        color=discord.Color.violet()
     )
     embed.set_thumbnail(url="attachment://pokemon.png")
     type_str = data['type_1'] + (f" / {data['type_2']}" if data['type_2'] else "")
     embed.add_field(name="Types", value=type_str, inline=True)
-    embed.add_field(name="Nom Anglais", value=data['nom_en'], inline=True)
+    embed.add_field(name="French Name", value=data['nom_fr'], inline=True)
 
     if data.get('region'):
         # On affiche directement ce qu'il y a en base de données
-        embed.add_field(name="Région", value=data['region'], inline=True)
+        embed.add_field(name="Region", value=data['region'], inline=True)
     stats = (
         f"**PV:** {data['hp']}\n"
         f"**ATK:** {data['atk']}\n"
