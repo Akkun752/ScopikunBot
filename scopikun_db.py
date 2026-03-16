@@ -55,3 +55,76 @@ def get_pokemon_data(query_text, region_input=None):
             return cursor.fetchone()
     finally:
         conn.close()
+    
+def set_friend_code(user_id, friend_code):
+    conn = get_connection()
+    try:
+        with conn.cursor() as cursor:
+            # On utilise ON DUPLICATE KEY UPDATE pour mettre à jour si l'ID existe déjà
+            sql = "INSERT INTO saft_profiles (user_id, friend_code) VALUES (%s, %s) ON DUPLICATE KEY UPDATE friend_code = %s"
+            cursor.execute(sql, (user_id, friend_code, friend_code))
+        conn.commit()
+    finally:
+        conn.close()
+
+def get_friend_code(user_id):
+    conn = get_connection()
+    try:
+        with conn.cursor() as cursor:
+            sql = "SELECT friend_code FROM saft_profiles WHERE user_id = %s"
+            cursor.execute(sql, (user_id,))
+            result = cursor.fetchone()
+            return result['friend_code'] if result else None
+    finally:
+        conn.close()
+
+def get_profile(user_id):
+    conn = get_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT * FROM saft_profiles WHERE user_id = %s", (user_id,))
+            return cursor.fetchone()
+    finally:
+        conn.close()
+
+def update_profile_value(user_id, column, value):
+    conn = get_connection()
+    try:
+        with conn.cursor() as cursor:
+            # Ensure profile exists
+            cursor.execute("INSERT IGNORE INTO saft_profiles (user_id) VALUES (%s)", (user_id,))
+            # Update specific column
+            sql = f"UPDATE saft_profiles SET {column} = %s WHERE user_id = %s"
+            cursor.execute(sql, (value, user_id))
+            conn.commit()
+    finally:
+        conn.close()
+
+def validate_pokemon_id(query):
+    """Vérifie si le pokémon existe et retourne son ID unique (pk)."""
+    conn = get_connection()
+    try:
+        with conn.cursor() as cursor:
+            search_id = query.zfill(4) if query.isdigit() else None
+            sql = "SELECT id FROM scpk_pokemon WHERE num_dex = %s OR nom_fr = %s OR nom_en = %s LIMIT 1"
+            cursor.execute(sql, (search_id, query, query))
+            result = cursor.fetchone()
+            return result['id'] if result else None
+    finally:
+        conn.close()
+
+def get_profile_with_pokemon(user_id):
+    """Récupère le profil et joint le nom du pokémon via son ID."""
+    conn = get_connection()
+    try:
+        with conn.cursor() as cursor:
+            sql = """
+                SELECT p.*, s.nom_en as pokemon_name 
+                FROM saft_profiles p
+                LEFT JOIN scpk_pokemon s ON p.fav_pokemon = s.id
+                WHERE p.user_id = %s
+            """
+            cursor.execute(sql, (user_id,))
+            return cursor.fetchone()
+    finally:
+        conn.close()
