@@ -17,7 +17,7 @@ import scopikun_db
 load_dotenv()
 
 # Configuration
-VERSION = "v0.0.7"
+VERSION = "v0.0.8"
 print(f"Lancement du bot SAF Team {VERSION}...")
 
 TYPE_TRANSLATIONS = {
@@ -99,25 +99,12 @@ async def pokedex(interaction: discord.Interaction, pokemon: str, forme: str = N
         )
         return
 
-    # image
-# 1. Récupération du numéro (ex: 0019 ou 0983)
     num = str(data['num_dex']).zfill(4)
-    
-    # 2. Logique du suffixe
-    # On n'ajoute un suffixe QUE si ce n'est PAS la forme originale du Pokémon.
-    # Dans ta DB, les formes originales ont souvent l'ID le plus bas pour un num_dex.
     
     suffixe = ""
     region = data.get('region')
     if region == "Unys":
             region = "Unova"
-    
-    # Liste des régions qui DOIVENT avoir un suffixe (les formes régionales)
-    # On vérifie si le nom contient la région ou si c'est une exception connue
-    # Mais le plus simple : est-ce que c'est un Rattata d'Alola ou un Scalpereur natif ?
-    
-    # On regarde si la colonne 'forme' en DB contient un code (A, G, H, P)
-    # ou si la région est une région de "forme" ET que le Pokémon existe ailleurs.
     
     if data.get('forme') in ['A', 'G', 'H', 'P']:
         suffixe = data['forme']
@@ -130,7 +117,6 @@ async def pokedex(interaction: discord.Interaction, pokemon: str, forme: str = N
     elif region == "Paldea" and int(num) < 906: # Pokémon des anciennes gen en version Paldea (ex: Tauros)
         suffixe = "P"
 
-    # 3. Construction du nom de fichier
     filename = f"{num}{suffixe}.png"
     path_image = f"./sprites/{filename}"
     
@@ -139,7 +125,6 @@ async def pokedex(interaction: discord.Interaction, pokemon: str, forme: str = N
         return
     file = discord.File(path_image, filename="pokemon.png")
 
-    # embed
     embed = discord.Embed(
         title=f"#{num} - {data['nom_en']}",
         #description=data['description'],
@@ -153,8 +138,7 @@ async def pokedex(interaction: discord.Interaction, pokemon: str, forme: str = N
     embed.add_field(name="French Name", value=data['nom_fr'], inline=True)
 
     if data.get('region'):
-        # On affiche directement ce qu'il y a en base de données
-        embed.add_field(name="Region", value=data['region'], inline=True)
+        embed.add_field(name="Region", value=region, inline=True)
     stats = (
         f"**PV:** {data['hp']}\n"
         f"**ATK:** {data['atk']}\n"
