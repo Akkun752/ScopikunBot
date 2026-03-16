@@ -17,7 +17,7 @@ import scopikun_db
 load_dotenv()
 
 # Configuration
-VERSION = "v0.1.1"
+VERSION = "v0.1.2"
 print(f"Lancement du bot SAF Team {VERSION}...")
 
 TYPE_TRANSLATIONS = {
@@ -78,6 +78,9 @@ async def help_command(interaction: discord.Interaction): # Retrait de self
     )
     embed.add_field(name="/fiend_code", value="Show your Nintendo Friend Code", inline=False)
     embed.add_field(name="/pokedex", value="Display the Pokédex page of a Pokémon", inline=False)
+    embed.add_field(name="/profile", value="Display your profile", inline=False)
+    embed.add_field(name="/set_favourite_game", value="Set your favourite Pokémon game", inline=False)
+    embed.add_field(name="/set_favourite_pokemon", value="Set your favourite Pokémon", inline=False)
     embed.add_field(name="/set_fiend_code", value="Set your Nintendo Friend Code", inline=False)
 
     if interaction.user.guild_permissions.administrator:
@@ -216,6 +219,7 @@ async def set_fav_pokemon(interaction: discord.Interaction, pokemon: str):
     app_commands.Choice(name="Omega Ruby & Alpha Sapphire", value="Pokémon Omega Ruby & Alpha Sapphire"),
     app_commands.Choice(name="Sun & Moon", value="Pokémon Sun & Moon"),
     app_commands.Choice(name="Ultra-Sun & Ultra-Moon", value="Pokémon Ultra-Sun & Ultra-Moon"),
+    app_commands.Choice(name="Let's Go Pikachu & Let's Go Eevee", value="Pokémon Let's Go Pikachu & Let's Go Eevee"),
     app_commands.Choice(name="Sword & Shield", value="Pokémon Sword & Shield"),
     app_commands.Choice(name="Brilliant Diamond & Shining Pearl", value="Pokémon Brilliant Diamond & Shining Pearl"),
     app_commands.Choice(name="Legends: Arceus", value="Pokémon Legends: Arceus"),
