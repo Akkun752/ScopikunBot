@@ -17,7 +17,7 @@ import scopikun_db
 load_dotenv()
 
 # Configuration
-VERSION = "v0.0.5"
+VERSION = "v0.0.6"
 print(f"Lancement du bot SAF Team {VERSION}...")
 
 class MyBot(commands.Bot):
@@ -53,7 +53,7 @@ async def help_command(interaction: discord.Interaction): # Retrait de self
     embed = discord.Embed(
         title="SAFT Bot Help Center",
         description="Here are all the commands !",
-        color=discord.Color.violet()
+        color=discord.Color(0x8A2BE2)
     )
     embed.add_field(name="/pokedex", value="Display the Pokédex page of a Pokémon", inline=False)
 
@@ -120,7 +120,7 @@ async def pokedex(interaction: discord.Interaction, pokemon: str, forme: str = N
     embed = discord.Embed(
         title=f"#{num} - {data['nom_en']}",
         #description=data['description'],
-        color=discord.Color.violet()
+        color=discord.Color(0x8A2BE2)
     )
     embed.set_thumbnail(url="attachment://pokemon.png")
     type_str = data['type_1'] + (f" / {data['type_2']}" if data['type_2'] else "")
