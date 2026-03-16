@@ -17,8 +17,29 @@ import scopikun_db
 load_dotenv()
 
 # Configuration
-VERSION = "v0.0.6"
+VERSION = "v0.0.7"
 print(f"Lancement du bot SAF Team {VERSION}...")
+
+TYPE_TRANSLATIONS = {
+    "Feu": "Fire",
+    "Eau": "Water",
+    "Plante": "Grass",
+    "Électrik": "Electric",
+    "Normal": "Normal",
+    "Spectre": "Ghost",
+    "Acier": "Steel",
+    "Poison": "Poison",
+    "Insecte": "Bug",
+    "Combat": "Fighting",
+    "Vol": "Flying",
+    "Dragon": "Dragon",
+    "Ténèbres": "Dark",
+    "Fée": "Fairy",
+    "Glace": "Ice",
+    "Roche": "Rock",
+    "Sol": "Ground",
+    "Psy": "Psychic",
+}
 
 class MyBot(commands.Bot):
     def __init__(self):
@@ -64,7 +85,7 @@ async def help_command(interaction: discord.Interaction): # Retrait de self
 # === Commande /pokedex ===
 @bot.tree.command(name="pokedex", description="Display the Pokédex page of a Pokémon")
 @app_commands.describe(
-    pokemon="Name (FR/EN) or Dex Number",
+    pokemon="Name (EN/FR) or Dex Number",
     forme="Optionnal : Alola, Galar, Hisui, Paldea (or A, G, H, P)"
 )
 async def pokedex(interaction: discord.Interaction, pokemon: str, forme: str = None):
@@ -88,6 +109,8 @@ async def pokedex(interaction: discord.Interaction, pokemon: str, forme: str = N
     
     suffixe = ""
     region = data.get('region')
+    if region == "Unys":
+            region = "Unova"
     
     # Liste des régions qui DOIVENT avoir un suffixe (les formes régionales)
     # On vérifie si le nom contient la région ou si c'est une exception connue
@@ -123,7 +146,9 @@ async def pokedex(interaction: discord.Interaction, pokemon: str, forme: str = N
         color=discord.Color(0x8A2BE2)
     )
     embed.set_thumbnail(url="attachment://pokemon.png")
-    type_str = data['type_1'] + (f" / {data['type_2']}" if data['type_2'] else "")
+    type_1 = TYPE_TRANSLATIONS.get(data['type_1'], data['type_1'])  # On garde le type en français si non trouvé
+    type_2 = TYPE_TRANSLATIONS.get(data['type_2'], data['type_2']) if data['type_2'] else None
+    type_str = type_1 + (f" / {type_2}" if type_2 else "")
     embed.add_field(name="Types", value=type_str, inline=True)
     embed.add_field(name="French Name", value=data['nom_fr'], inline=True)
 
@@ -138,7 +163,7 @@ async def pokedex(interaction: discord.Interaction, pokemon: str, forme: str = N
         f"**SPD:** {data['spd']}\n"
         f"**SPE:** {data['spe']}"
     )
-    embed.add_field(name="Statistiques de base", value=stats, inline=False)
+    embed.add_field(name="Statistics", value=stats, inline=False)
 
     await interaction.response.send_message(embed=embed, file=file)
     
